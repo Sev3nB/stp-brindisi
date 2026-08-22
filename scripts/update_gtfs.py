@@ -162,6 +162,16 @@ def main():
         with connection.cursor() as cursor:
             cursor.execute(SCHEMA)
             cursor.execute("SET search_path TO gtfs, public")
+            current_hashes = dict(cursor.execute(
+                "SELECT feed_id, sha256 FROM feeds"
+            ).fetchall())
+            downloaded_hashes = {
+                feed_id: hashlib.sha256(payload).hexdigest()
+                for feed_id, payload in payloads.items()
+            }
+            if current_hashes == downloaded_hashes:
+                print("I feed STP non sono cambiati: nessun aggiornamento necessario.")
+                return
             cursor.execute("TRUNCATE stop_times, trips, routes, stops, calendars, calendar_dates, feeds")
             for feed_id, url in FEEDS.items():
                 counts = import_feed(cursor, feed_id, url, payloads[feed_id])

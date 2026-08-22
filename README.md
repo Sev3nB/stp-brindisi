@@ -81,7 +81,28 @@ Poi apri dal telefono `http://IP-DEL-PC:5000`.
 Lo script crea automaticamente lo schema privato `gtfs`, scarica i quattro
 feed ufficiali e carica i dati con PostgreSQL `COPY`. L'aggiornamento avviene
 in una sola transazione: se qualcosa fallisce, i dati precedenti restano
-intatti. Non inserire mai `.env` in Git.
+intatti. Se i file STP non sono cambiati, termina senza riscrivere le tabelle.
+Non inserire mai `.env` in Git.
+
+## Pubblicazione su Vercel e aggiornamento GTFS
+
+Vercel deve eseguire soltanto l'app Flask: non avviare `update_gtfs.py` durante
+la build o all'interno di una funzione serverless. Nel progetto Vercel aggiungi
+`DATABASE_URL` in **Settings → Environment Variables** e usa la stessa Session
+pooler di Supabase.
+
+Il repository include `.github/workflows/update-gtfs.yml`, che aggiorna il
+database ogni lunedì e può essere avviato manualmente. Dopo aver pubblicato il
+repository su GitHub:
+
+1. apri **GitHub → repository → Settings → Secrets and variables → Actions**;
+2. crea un nuovo repository secret chiamato esattamente `DATABASE_URL`;
+3. inserisci come valore la connection string Session pooler di Supabase;
+4. apri la scheda **Actions → Aggiorna dati STP**;
+5. premi **Run workflow** per effettuare subito il primo caricamento.
+
+La variabile va quindi configurata sia su Vercel, per leggere gli orari, sia
+nei Secrets di GitHub, per aggiornarli. Non copiarla dentro il codice.
 
 I dati sono orari programmati, non posizioni o ritardi in tempo reale. Fonte:
 STP Brindisi S.p.A., open data GTFS (CC BY 4.0).

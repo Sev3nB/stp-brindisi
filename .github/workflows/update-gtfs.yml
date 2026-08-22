@@ -1,0 +1,33 @@
+name: Aggiorna dati STP
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Ogni lunedì alle 05:15 italiane in ora solare (04:15 UTC).
+    - cron: "15 4 * * 1"
+
+concurrency:
+  group: update-stp-gtfs
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Scarica il progetto
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installa le dipendenze
+        run: python -m pip install -r requirements.txt
+
+      - name: Aggiorna Supabase dai feed STP
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/update_gtfs.py
