@@ -20,9 +20,10 @@
       <span><strong>Bus Brindisi</strong><small>Orari STP</small></span>
     </a>
     <nav class="main-nav" aria-label="Navigazione principale">
-      <a href="{{ url_for('main.lines') }}"><span>≡</span>Linee</a>
+      <a class="nav-lines" href="{{ url_for('main.lines') }}"><span>≡</span>Linee</a>
       <a href="{{ url_for('main.stops_map') }}"><span>⌖</span>Fermate</a>
       <a class="planner-link" href="{{ url_for('main.index') }}#planner"><span>→</span>Percorso</a>
+      <a href="{{ url_for('main.timetables') }}"><span>◷</span>Orari</a>
       <button type="button" id="favorites-toggle"><span>★</span>Preferiti</button>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambia tema" title="Cambia tema"><span>◐</span>Tema</button>
     </nav>

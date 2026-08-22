@@ -7,7 +7,7 @@ from .db import get_db
 from .gtfs_time import gtfs_seconds
 from .geocoding import search_places
 from .search import (
-    find_direct_journeys, get_journey_detail, get_route_detail, get_route_schedule, get_stop_detail,
+    find_direct_journeys, get_journey_detail, get_route_detail, get_route_schedule, get_stop_detail, get_timetables,
     list_routes, nearby_stops, search_stops, stops_for_map,
 )
 from .trip_planner import plan_journeys
@@ -115,6 +115,28 @@ def lines():
         "francavilla": "Urbane di Francavilla Fontana",
     }
     return render_template("lines.html", routes=routes, groups=groups, active_feed=feed_id)
+
+
+@bp.get("/timetables")
+def timetables():
+    date_text = request.args.get("date", date.today().isoformat())
+    feed_id = request.args.get("feed", "")
+    query = request.args.get("q", "").strip()
+    try:
+        travel_date = datetime.strptime(date_text, "%Y-%m-%d").date()
+    except ValueError:
+        travel_date = date.today()
+        date_text = travel_date.isoformat()
+    with get_db() as db:
+        routes = get_timetables(db, travel_date, feed_id or None, query)
+    groups = {
+        "brindisi": "Urbane di Brindisi", "extraurbano": "Extraurbane",
+        "ostuni": "Urbane di Ostuni", "francavilla": "Urbane di Francavilla Fontana",
+    }
+    return render_template(
+        "timetables.html", routes=routes, groups=groups, selected_date=date_text,
+        active_feed=feed_id, query=query,
+    )
 
 
 @bp.get("/line/<feed_id>/<route_id>")

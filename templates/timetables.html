@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Orari STP · Bus Brindisi{% endblock %}
+{% block content %}
+<section class="network-shell timetables-shell">
+  <div class="page-heading compact">
+    <p class="eyebrow">Corse programmate</p>
+    <h1>Orari</h1>
+    <p>Scegli il giorno e trova rapidamente la linea che ti interessa.</p>
+  </div>
+
+  <form class="timetable-filters" method="get">
+    <label><span>Giorno</span><input type="date" name="date" value="{{ selected_date }}"></label>
+    <label><span>Servizio</span><select name="feed"><option value="">Tutti i servizi</option>{% for key, label in groups.items() %}<option value="{{ key }}" {% if active_feed == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+    <label class="timetable-query"><span>Linea o direzione</span><input type="search" name="q" value="{{ query }}" placeholder="Es. 7, Lecce, Ecotekne"></label>
+    <button type="submit">Mostra orari</button>
+  </form>
+
+  <div class="timetable-status">
+    <strong>{{ routes|length }} {% if routes|length == 1 %}linea disponibile{% else %}linee disponibili{% endif %}</strong>
+    <span>{{ selected_date }}</span>
+  </div>
+
+  {% if routes %}
+  <div class="timetable-list">
+    {% for route in routes %}
+    <article class="timetable-card">
+      <div class="timetable-line-head">
+        <span class="line-number">{{ route.route_short_name or 'STP' }}</span>
+        <div><small>{{ groups.get(route.feed_id, route.feed_id) }}</small><h2>{{ route.route_long_name or 'Linea STP' }}</h2></div>
+        <span>{{ route.trips_count }} {% if route.trips_count == 1 %}corsa{% else %}corse{% endif %}</span>
+      </div>
+      <div class="direction-times">
+        {% for direction in route.directions %}
+        <div>
+          <strong>{{ direction.trip_headsign or 'Direzione non indicata' }}</strong>
+          <p><span>Prima</span><time>{{ direction.first_display }}</time><i>→</i><span>Ultima</span><time>{{ direction.last_display }}</time></p>
+          <small>{{ direction.trips_count }} {% if direction.trips_count == 1 %}partenza{% else %}partenze{% endif %} programmate</small>
+        </div>
+        {% endfor %}
+      </div>
+      <a class="timetable-open" href="{{ url_for('main.line_detail', feed_id=route.feed_id, route_id=route.route_id, date=selected_date) }}#orari">Vedi tutte le partenze <span>→</span></a>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><span>◷</span><h2>Nessun orario trovato</h2><p>Prova un altro giorno, servizio o termine di ricerca.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

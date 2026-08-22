@@ -2,6 +2,7 @@ import unittest
 from datetime import date
 
 from stp_app.gtfs_time import active_service_ids, display_time, gtfs_seconds
+from stp_app.search import get_timetables
 from stp_app.trip_planner import candidate_stops, endpoint_candidates, haversine, journey_quality, walking_seconds
 
 
@@ -66,6 +67,33 @@ class GtfsTimeTests(unittest.TestCase):
             {"type": "walk", "distance": 300},
         ]
         self.assertIsNotNone(journey_quality(segments, 8500, 2400, 0))
+
+    def test_timetable_groups_directions_under_the_same_line(self):
+        class Result:
+            def __init__(self, rows): self.rows = rows
+            def fetchall(self): return self.rows
+
+        class FakeDb:
+            def execute(self, query, _params):
+                if "FROM calendars" in query:
+                    return Result([{"feed_id": "brindisi", "service_id": "weekday"}])
+                if "FROM calendar_dates" in query:
+                    return Result([])
+                return Result([
+                    {"feed_id": "brindisi", "route_id": "7", "route_short_name": "7",
+                     "route_long_name": "Centro - Ospedale", "trip_headsign": "Ospedale",
+                     "first_departure": "06:30:00", "last_departure": "20:30:00",
+                     "last_arrival": "21:00:00", "trips_count": 12},
+                    {"feed_id": "brindisi", "route_id": "7", "route_short_name": "7",
+                     "route_long_name": "Centro - Ospedale", "trip_headsign": "Centro",
+                     "first_departure": "06:45:00", "last_departure": "20:45:00",
+                     "last_arrival": "21:15:00", "trips_count": 11},
+                ])
+
+        result = get_timetables(FakeDb(), date(2026, 8, 24))
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result[0]["directions"]), 2)
+        self.assertEqual(result[0]["trips_count"], 23)
 
 
 if __name__ == "__main__":

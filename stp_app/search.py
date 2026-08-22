@@ -127,6 +127,67 @@ def get_route_schedule(db, feed_id, route_id, travel_date, limit=200):
     ) for row in rows]
 
 
+def get_timetables(db, travel_date, feed_id=None, query=""):
+    """Riepilogo giornaliero compatto, diviso per linea e direzione."""
+    active = active_service_ids(db, travel_date)
+    if feed_id:
+        active = {(feed, service) for feed, service in active if feed == feed_id}
+    if not active:
+        return []
+
+    service_marks = ",".join("(%s,%s)" for _ in active)
+    params = [value for pair in sorted(active) for value in pair]
+    filters = []
+    if query.strip():
+        filters.append("(LOWER(r.route_short_name) LIKE LOWER(%s) OR LOWER(r.route_long_name) LIKE LOWER(%s) OR LOWER(t.trip_headsign) LIKE LOWER(%s))")
+        term = f"%{query.strip()}%"
+        params.extend((term, term, term))
+    extra_where = f"AND {' AND '.join(filters)}" if filters else ""
+    rows = db.execute(
+        f"""
+        WITH trip_windows AS (
+          SELECT t.feed_id, t.route_id, t.trip_id, t.trip_headsign,
+                 MIN(st.departure_time) AS departure_time,
+                 MAX(st.arrival_time) AS arrival_time
+          FROM trips t JOIN stop_times st
+            ON st.feed_id=t.feed_id AND st.trip_id=t.trip_id
+          JOIN routes r ON r.feed_id=t.feed_id AND r.route_id=t.route_id
+          WHERE (t.feed_id, t.service_id) IN ({service_marks}) {extra_where}
+          GROUP BY t.feed_id, t.route_id, t.trip_id, t.trip_headsign
+        )
+        SELECT w.feed_id, w.route_id, r.route_short_name, r.route_long_name,
+               w.trip_headsign, MIN(w.departure_time) AS first_departure,
+               MAX(w.departure_time) AS last_departure,
+               MAX(w.arrival_time) AS last_arrival, COUNT(*) AS trips_count
+        FROM trip_windows w JOIN routes r
+          ON r.feed_id=w.feed_id AND r.route_id=w.route_id
+        GROUP BY w.feed_id, w.route_id, r.route_short_name, r.route_long_name, w.trip_headsign
+        ORDER BY CASE w.feed_id WHEN 'brindisi' THEN 1 WHEN 'extraurbano' THEN 2
+          WHEN 'ostuni' THEN 3 WHEN 'francavilla' THEN 4 ELSE 5 END,
+          r.route_short_name, r.route_long_name, w.trip_headsign
+        """,
+        params,
+    ).fetchall()
+
+    routes = {}
+    for row in rows:
+        key = (row["feed_id"], row["route_id"])
+        route = routes.setdefault(key, {
+            "feed_id": row["feed_id"], "route_id": row["route_id"],
+            "route_short_name": row["route_short_name"], "route_long_name": row["route_long_name"],
+            "directions": [], "trips_count": 0,
+        })
+        direction = dict(row)
+        direction.update(
+            first_display=display_time(row["first_departure"]),
+            last_display=display_time(row["last_departure"]),
+            arrival_display=display_time(row["last_arrival"]),
+        )
+        route["directions"].append(direction)
+        route["trips_count"] += row["trips_count"]
+    return list(routes.values())
+
+
 def stops_for_map(db, query="", feed_id=None, limit=1000):
     conditions = []
     params = []

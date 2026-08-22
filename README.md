@@ -6,6 +6,7 @@ corse programmate pubblicate da STP Brindisi nei feed GTFS ufficiali.
 Funzioni principali:
 
 - elenco completo delle linee urbane ed extraurbane;
+- sezione Orari dedicata, filtrabile per giorno, servizio, linea e direzione;
 - dettaglio di ogni linea con direzioni, varianti e fermate ordinate;
 - mappa di tutte le fermate filtrabile per città e servizio;
 - pianificatore automatico da indirizzi, luoghi, GPS, punti sulla mappa, luoghi

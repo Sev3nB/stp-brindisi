@@ -39,7 +39,7 @@
   <script id="variants-data" type="application/json">{{ route.variants|tojson }}</script>
   {% else %}<div class="empty"><h2>Nessun percorso disponibile</h2></div>{% endif %}
 
-  <section class="schedule-section">
+  <section class="schedule-section" id="orari">
     <div class="schedule-heading"><div><p class="eyebrow">Orari programmati</p><h2>Partenze della linea</h2></div>
       <form method="get"><label>Giorno <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()"></label></form>
     </div>
