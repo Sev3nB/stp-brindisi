@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Corse disponibili · Bus Brindisi{% endblock %}
+{% block content %}
+<section class="results-shell">
+  <a class="back" href="{{ url_for('main.index') }}">← Nuova ricerca</a>
+  {% if from_name %}
+  <div class="route-summary">
+    <div><span>Da</span><strong>{{ from_name }}</strong></div>
+    <span class="summary-arrow">→</span>
+    <div><span>A</span><strong>{{ to_name }}</strong></div>
+  </div>
+  <div class="result-heading">
+    <h1>Corse disponibili</h1>
+    <p>{{ date }} · dopo le {{ time }}</p>
+  </div>
+  {% endif %}
+
+  {% if error %}
+    <div class="empty"><span>!</span><h2>Controlla la ricerca</h2><p>{{ error }}</p></div>
+  {% elif not journeys %}
+    <div class="empty"><span>—</span><h2>Nessuna corsa diretta</h2><p>Prova un altro orario o controlla le fermate scelte.</p></div>
+  {% else %}
+    <div class="journey-list">
+    {% for item in journeys %}
+      <a class="journey-card" href="{{ url_for('main.journey', feed_id=item.feed_id, trip_id=item.trip_id, from=from_key.split(':',1)[1], to=to_key.split(':',1)[1]) }}">
+        <div class="times"><strong>{{ item.departure_display }}</strong><span></span><strong>{{ item.arrival_display }}</strong></div>
+        <div class="places"><span>{{ from_name }}</span><span>{{ to_name }}</span></div>
+        <div class="journey-meta">
+          <span class="route-badge">{{ item.route_short_name or 'STP' }}</span>
+          <span>{{ item.duration }}</span><i></i><span>{{ item.stops_count }} fermate</span>
+          <b aria-hidden="true">›</b>
+        </div>
+        {% if item.trip_headsign %}<p class="headsign">Direzione {{ item.trip_headsign }}</p>{% endif %}
+      </a>
+    {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+

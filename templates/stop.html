@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ stop.stop_name }} · Bus Brindisi{% endblock %}
+{% block content %}
+<section class="network-shell stop-detail-shell">
+  <a class="back" href="{{ url_for('main.stops_map', q=stop.stop_name.split(' - ')[0]) }}">← Mappa fermate</a>
+  <div class="stop-detail-head"><span class="stop-pin">●</span><div><p>{{ stop.feed_id|capitalize }}</p><h1>{{ stop.stop_name }}</h1></div>
+    <button class="stop-favorite labeled" type="button" data-favorite-stop data-key="{{ stop.feed_id }}:{{ stop.stop_id }}" data-name="{{ stop.stop_name }}" data-lat="{{ stop.stop_lat }}" data-lon="{{ stop.stop_lon }}">☆ Salva</button>
+  </div>
+  <div class="stop-actions"><a href="{{ url_for('main.index', from_stop=stop.feed_id ~ ':' ~ stop.stop_id, from_name=stop.stop_name, from_lat=stop.stop_lat, from_lon=stop.stop_lon) }}#planner">Parti da qui</a><a href="{{ url_for('main.index', to_stop=stop.feed_id ~ ':' ~ stop.stop_id, to_name=stop.stop_name, to_lat=stop.stop_lat, to_lon=stop.stop_lon) }}#planner">Arriva qui</a></div>
+  <section class="passing-lines"><p class="eyebrow">Collegamenti</p><h2>Linee che passano qui</h2><div>{% for route in stop.routes %}<a href="{{ url_for('main.line_detail', feed_id=stop.feed_id, route_id=route.route_id) }}"><strong>{{ route.route_short_name or 'STP' }}</strong><span>{{ route.route_long_name }}</span></a>{% else %}<p>Nessuna linea associata.</p>{% endfor %}</div></section>
+  <section class="schedule-section"><div class="schedule-heading"><div><p class="eyebrow">Orari</p><h2>Passaggi alla fermata</h2></div><form><label>Giorno<input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()"></label></form></div>
+    <div class="stop-departures">{% for item in stop.departures %}<article><time>{{ item.time_display }}</time><span class="line-number">{{ item.route_short_name or 'STP' }}</span><div><strong>{{ item.trip_headsign or item.route_long_name }}</strong><small>Orario programmato</small></div></article>{% else %}<div class="empty compact-empty"><h2>Nessun passaggio</h2><p>Non risultano corse per questa data.</p></div>{% endfor %}</div>
+  </section>
+</section>
+{% endblock %}

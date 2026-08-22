@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<section class="search-shell">
+  <div class="intro">
+    <p class="eyebrow">Rete completa STP Brindisi</p>
+    <h1>Linee e fermate, finalmente su una mappa.</h1>
+    <p>Esplora il servizio urbano ed extraurbano oppure cerca una corsa.</p>
+  </div>
+
+  {% if not ready %}
+  <div class="notice warning">
+    <strong>Dati non ancora importati</strong>
+    <span>Esegui <code>python scripts/update_gtfs.py</code> e ricarica la pagina.</span>
+  </div>
+  {% endif %}
+
+  <div class="explore-grid">
+    <a href="{{ url_for('main.lines') }}" class="explore-card">
+      <span class="explore-icon">≡</span>
+      <div><strong>Tutte le linee</strong><small>Urbane, extraurbane e varianti</small></div>
+      <b>→</b>
+    </a>
+    <a href="{{ url_for('main.stops_map') }}" class="explore-card">
+      <span class="explore-icon">⌖</span>
+      <div><strong>Mappa fermate</strong><small>Cerca una città e visualizzale tutte</small></div>
+      <b>→</b>
+    </a>
+  </div>
+
+  <section class="favorites-home" id="favorites-home" hidden>
+    <div class="section-title"><p class="eyebrow">Salvati</p><h2>I tuoi preferiti</h2></div>
+    <div class="favorite-links" id="favorite-links"></div>
+  </section>
+
+  <div class="section-title" id="planner">
+    <p class="eyebrow">Pianifica</p>
+    <h2>Dove vuoi andare?</h2>
+    <p class="planner-help">Inserisci indirizzi, luoghi o fermate: linee e cambi li troviamo noi.</p>
+  </div>
+
+  <form class="trip-form" action="{{ url_for('main.automatic_plan') }}" method="post" id="trip-form">
+    <div class="route-fields">
+      <span class="route-line" aria-hidden="true"><i></i><b></b></span>
+      <div class="autocomplete">
+        <label for="from-label">Da</label>
+        <input id="from-label" type="search" autocomplete="off" placeholder="La tua posizione, casa o un indirizzo" required {% if not ready %}disabled{% endif %}>
+        <input id="from-point" name="origin_json" type="hidden">
+        <div class="field-actions"><button class="use-location" data-use-location="from" type="button" {% if not ready %}disabled{% endif %}>◎ Mia posizione</button><button class="pick-map" data-pick-map="from" type="button">⌖ Scegli sulla mappa</button></div>
+        <div class="suggestions" role="listbox" hidden></div>
+      </div>
+      <button class="swap" type="button" id="swap" aria-label="Inverti partenza e destinazione">⇅</button>
+      <div class="autocomplete">
+        <label for="to-label">A</label>
+        <input id="to-label" type="search" autocomplete="off" placeholder="Es. Ecotekne, Via Monteroni" required {% if not ready %}disabled{% endif %}>
+        <input id="to-point" name="destination_json" type="hidden">
+        <div class="field-actions"><button class="pick-map" data-pick-map="to" type="button">⌖ Scegli sulla mappa</button></div>
+        <div class="suggestions" role="listbox" hidden></div>
+      </div>
+    </div>
+
+    <div class="when-fields">
+      <label><span>Data</span><input type="date" name="date" value="{{ today }}" required></label>
+      <label><span>Dopo le</span><input type="time" name="time" value="07:00" required></label>
+    </div>
+    <p class="form-error" id="form-error" role="alert"></p>
+    <button class="primary" type="submit" {% if not ready %}disabled{% endif %}>
+      Calcola il percorso <span aria-hidden="true">→</span>
+    </button>
+  </form>
+  <section class="recent-searches" id="recent-searches" hidden><small>Ricerche recenti</small><div id="recent-search-list"></div></section>
+
+  <div class="map-picker" id="map-picker" hidden>
+    <div class="map-picker-card"><div class="sheet-head"><div><small>Sposta la mappa e tocca il punto</small><h2>Scegli posizione</h2></div><button type="button" id="map-picker-close">×</button></div><div id="picker-map"></div><button class="primary" type="button" id="map-picker-confirm">Usa questo punto</button></div>
+  </div>
+
+  {% if metadata %}
+  <details class="data-details">
+    <summary>Dati caricati</summary>
+    <div>
+      {% for feed in metadata %}
+      <p><strong>{{ feed.feed_id|capitalize }}</strong><span>{{ feed.start_date }}–{{ feed.end_date }}</span></p>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="{{ url_for('static', filename='js/planner.js') }}"></script>{% endblock %}

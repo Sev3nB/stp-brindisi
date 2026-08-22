@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#075985">
+  <meta name="description" content="Consulta fermate e corse programmate STP Brindisi.">
+  <title>{% block title %}STP Brindisi personale{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script>document.documentElement.dataset.theme=localStorage.getItem('stpTheme')||'light';</script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('main.index') }}" aria-label="Torna alla ricerca">
+      <span class="brand-mark" aria-hidden="true">B</span>
+      <span><strong>Bus Brindisi</strong><small>Orari STP</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Navigazione principale">
+      <a href="{{ url_for('main.lines') }}"><span>≡</span>Linee</a>
+      <a href="{{ url_for('main.stops_map') }}"><span>⌖</span>Fermate</a>
+      <a class="planner-link" href="{{ url_for('main.index') }}#planner"><span>→</span>Percorso</a>
+      <button type="button" id="favorites-toggle"><span>★</span>Preferiti</button>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambia tema" title="Cambia tema"><span>◐</span>Tema</button>
+    </nav>
+    <span class="data-mode"><i></i> Orari programmati</span>
+  </header>
+  <div class="sheet-backdrop" id="favorites-backdrop" hidden></div>
+  <aside class="favorites-sheet" id="favorites-sheet" aria-hidden="true" aria-label="Preferiti">
+    <div class="sheet-head"><div><small>Accesso rapido</small><h2>Preferiti</h2></div><button type="button" id="favorites-close" aria-label="Chiudi">×</button></div>
+    <div id="favorites-content"></div>
+  </aside>
+  <main>{% block content %}{% endblock %}</main>
+  <footer>
+    Dati ufficiali STP Brindisi · CC BY 4.0 · Nessun dato in tempo reale
+  </footer>
+  <script src="{{ url_for('static', filename='js/preferences.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

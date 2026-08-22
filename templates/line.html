@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Linea {{ route.route_short_name }} · Bus Brindisi{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<section class="network-shell">
+  <a class="back" href="{{ url_for('main.lines', feed=route.feed_id) }}">← Tutte le linee</a>
+  <div class="line-hero">
+    <span class="line-number large">{{ route.route_short_name or 'STP' }}</span>
+    <div><p>{{ route.feed_id|capitalize }}</p><h1>{{ route.route_long_name or 'Linea STP' }}</h1></div>
+    <button class="favorite-button" type="button" data-favorite-line
+      data-key="{{ route.feed_id }}:{{ route.route_id }}"
+      data-name="Linea {{ route.route_short_name }} · {{ route.route_long_name }}"
+      data-url="{{ url_for('main.line_detail', feed_id=route.feed_id, route_id=route.route_id) }}">☆ Preferito</button>
+  </div>
+  {% if route.variants %}
+  <div class="variant-tabs" role="tablist">
+    {% for variant in route.variants %}
+    <button class="{% if loop.first %}active{% endif %}" data-variant="{{ loop.index0 }}">
+      {{ variant.trip_headsign or ('Direzione ' ~ (variant.direction_id if variant.direction_id is not none else loop.index)) }}
+      <small>{{ variant.stops_count }} fermate</small>
+    </button>
+    {% endfor %}
+  </div>
+  <div id="route-map" class="map large-map"></div>
+  {% for variant in route.variants %}
+  <div class="variant-panel {% if not loop.first %}hidden{% endif %}" data-panel="{{ loop.index0 }}">
+    <div class="timeline-card">
+      <h2>{{ variant.trip_headsign or 'Percorso' }}</h2>
+      <ol class="timeline">
+      {% for stop in variant.stops %}
+        <li class="{% if loop.first or loop.last %}endpoint{% endif %}">
+          <span class="sequence">{{ stop.arrival_time[:5] }}</span><span class="dot"></span><strong>{{ stop.stop_name }}</strong>
+        </li>
+      {% endfor %}
+      </ol>
+    </div>
+  </div>
+  {% endfor %}
+  <script id="variants-data" type="application/json">{{ route.variants|tojson }}</script>
+  {% else %}<div class="empty"><h2>Nessun percorso disponibile</h2></div>{% endif %}
+
+  <section class="schedule-section">
+    <div class="schedule-heading"><div><p class="eyebrow">Orari programmati</p><h2>Partenze della linea</h2></div>
+      <form method="get"><label>Giorno <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()"></label></form>
+    </div>
+    {% if schedule %}
+    <div class="schedule-list">
+      {% for trip in schedule %}
+      <article><strong>{{ trip.departure_display }}</strong><span>→</span><strong>{{ trip.arrival_display }}</strong>
+        <div><b>{{ trip.trip_headsign or route.route_long_name }}</b><small>{{ trip.stops_count }} fermate{% if trip.trip_short_name %} · Corsa {{ trip.trip_short_name }}{% endif %}</small></div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<div class="empty compact-empty"><h2>Nessuna corsa</h2><p>Non risultano servizi programmati per questa data.</p></div>{% endif %}
+  </section>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/routing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/line.js') }}"></script>
+{% endblock %}

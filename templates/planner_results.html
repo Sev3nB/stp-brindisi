@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Il tuo percorso · Bus Brindisi{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<section class="plan-results-shell">
+  <a class="back" href="{{ url_for('main.index') }}#planner">← Modifica ricerca</a>
+  {% if origin %}<div class="plan-route-head"><div><small>Da</small><strong>{{ origin.name }}</strong></div><span>→</span><div><small>A</small><strong>{{ destination.name }}</strong></div></div>{% endif %}
+  {% if error or not journeys %}
+  <div class="empty plan-empty"><span>!</span><h1>Nessun percorso utilizzabile</h1><p>{{ error or 'Non abbiamo trovato coincidenze realistiche per la data e l’orario scelti.' }}</p><a class="primary inline-primary" href="{{ url_for('main.index') }}#planner">Prova altre posizioni o un altro orario</a></div>
+  {% else %}
+  <div class="plan-summary"><div><p class="eyebrow">{{ date }} · dalle {{ time }}</p><h1>{{ journeys|length }} {% if journeys|length == 1 %}percorso trovato{% else %}alternative trovate{% endif %}</h1></div><p>Orari programmati STP · camminate stimate</p></div>
+  <div id="plan-map" class="map plan-map"></div>
+  <div class="plan-alternatives">
+    {% for journey in journeys %}
+    <article class="plan-option {% if loop.first %}active{% endif %}" data-option="{{ loop.index0 }}">
+      <button class="option-summary" type="button">
+        <span class="option-label">{{ journey.label }}</span>
+        <strong>{{ journey.duration }}</strong>
+        <small>Arrivo {{ journey.arrival_display }} · {{ journey.transfers }} {% if journey.transfers == 1 %}cambio{% else %}cambi{% endif %} · {{ journey.walking_meters }} m a piedi</small>
+        <b>⌄</b>
+      </button>
+      <div class="plan-steps">
+        {% for segment in journey.segments %}
+          {% if segment.type == 'bus' and segment.wait_before >= 120 %}
+          <div class="wait-step"><span>Attendi</span><strong>{{ (segment.wait_before / 60)|round|int }} min</strong><small>alla fermata</small></div>
+          {% endif %}
+          <button class="plan-step {{ segment.type }}" type="button" data-segment="{{ loop.index0 }}">
+            <span class="step-icon">{% if segment.type == 'walk' %}●{% else %}{{ segment.route_short_name or 'BUS' }}{% endif %}</span>
+            <div>
+              {% if segment.type == 'walk' %}
+                <small>{% if segment.access %}Raggiungi la fermata{% elif segment.egress %}Raggiungi la destinazione{% else %}Cambio a piedi{% endif %}</small>
+                <strong>{{ segment.from_name }} → {{ segment.to_name }}</strong>
+                <p>Circa {{ (segment.duration / 60)|round|int }} min · {{ segment.distance }} m</p>
+              {% else %}
+                <small>{{ segment.departure_display }} → {{ segment.arrival_display }}</small>
+                <strong>Linea {{ segment.route_short_name or 'STP' }}{% if segment.headsign %} · direzione {{ segment.headsign }}{% endif %}</strong>
+                <p>Sali a {{ segment.from_name }}<br>Scendi a {{ segment.to_name }}</p>
+              {% endif %}
+            </div><b>›</b>
+          </button>
+        {% endfor %}
+        <div class="destination-step"><span>◆</span><div><small>Arrivo previsto {{ journey.arrival_display }}</small><strong>{{ destination.name }}</strong></div></div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <script id="journeys-data" type="application/json">{{ journeys|tojson }}</script>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{% if journeys %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="{{ url_for('static', filename='js/routing.js') }}"></script><script src="{{ url_for('static', filename='js/planner_results.js') }}"></script>{% endif %}{% endblock %}

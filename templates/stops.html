@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Mappa fermate · Bus Brindisi{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block content %}
+<section class="network-shell stops-shell">
+  <div class="page-heading compact">
+    <p class="eyebrow">Mappa completa</p><h1>Fermate</h1>
+    <p>Scrivi “Brindisi” per vedere tutte le fermate della città, non solo i primi suggerimenti.</p>
+  </div>
+  <form class="stop-search" method="get">
+    <input name="q" value="{{ query }}" placeholder="Città o nome della fermata" aria-label="Cerca fermate">
+    <select name="feed" aria-label="Tipo di servizio">
+      <option value="">Tutti i servizi</option>
+      <option value="brindisi" {% if active_feed=='brindisi' %}selected{% endif %}>Urbano Brindisi</option>
+      <option value="extraurbano" {% if active_feed=='extraurbano' %}selected{% endif %}>Extraurbano</option>
+      <option value="ostuni" {% if active_feed=='ostuni' %}selected{% endif %}>Urbano Ostuni</option>
+      <option value="francavilla" {% if active_feed=='francavilla' %}selected{% endif %}>Urbano Francavilla</option>
+    </select>
+    <button type="submit">Cerca</button>
+  </form>
+  <div class="map-count"><strong>{{ stops|length }}</strong> fermate trovate{% if query %} per “{{ query }}”{% endif %}</div>
+  <div class="map-tools">
+    <button type="button" id="locate-me">◎ La mia posizione</button>
+    <button type="button" id="add-place">＋ Aggiungi luogo</button>
+    <button type="button" id="manage-places">Luoghi salvati</button>
+  </div>
+  {% if stops %}<div id="stops-map" class="map stops-map"></div>{% endif %}
+  <div class="stop-list">
+    {% for stop in stops %}
+    <article><span class="stop-dot"></span><a class="stop-main-link" href="{{ url_for('main.stop_detail', feed_id=stop.feed_id, stop_id=stop.stop_id) }}"><strong>{{ stop.stop_name }}</strong><small>{{ stop.feed_id|capitalize }}{% if stop.stop_code %} · {{ stop.stop_code }}{% endif %}</small></a>
+      <button class="stop-favorite" type="button" aria-label="Aggiungi ai preferiti"
+        data-favorite-stop data-key="{{ stop.feed_id }}:{{ stop.stop_id }}"
+        data-name="{{ stop.stop_name }}" data-lat="{{ stop.stop_lat }}" data-lon="{{ stop.stop_lon }}">☆</button>
+    </article>
+    {% else %}<div class="empty"><h2>Nessuna fermata trovata</h2><p>Prova con una parola più generica.</p></div>{% endfor %}
+  </div>
+  <script id="all-stops-data" type="application/json">{{ stops|tojson }}</script>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/stops.js') }}"></script>
+{% endblock %}

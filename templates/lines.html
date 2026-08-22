@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Tutte le linee · Bus Brindisi{% endblock %}
+{% block content %}
+<section class="network-shell">
+  <div class="page-heading">
+    <p class="eyebrow">Rete STP</p>
+    <h1>Tutte le linee</h1>
+    <p>Scegli una linea per vedere direzioni, varianti e fermate sulla mappa.</p>
+  </div>
+  <div class="filter-pills">
+    <a class="{% if not active_feed %}active{% endif %}" href="{{ url_for('main.lines') }}">Tutte</a>
+    {% for key, label in groups.items() %}
+    <a class="{% if active_feed == key %}active{% endif %}" href="{{ url_for('main.lines', feed=key) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  {% for feed_id, label in groups.items() %}
+    {% set group_routes = routes|selectattr('feed_id', 'equalto', feed_id)|list %}
+    {% if group_routes %}
+    <section class="line-group">
+      <div class="line-group-title"><h2>{{ label }}</h2><span>{{ group_routes|length }} linee</span></div>
+      <div class="line-grid">
+        {% for route in group_routes %}
+        <a class="line-card" href="{{ url_for('main.line_detail', feed_id=route.feed_id, route_id=route.route_id) }}">
+          <span class="line-number">{{ route.route_short_name or 'STP' }}</span>
+          <div><strong>{{ route.route_long_name or 'Linea STP' }}</strong><small>{{ route.trips_count }} corse nel feed</small></div>
+          <b>›</b>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  {% endfor %}
+</section>
+{% endblock %}
+

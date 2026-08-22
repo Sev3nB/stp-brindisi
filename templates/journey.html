@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Dettaglio corsa · Bus Brindisi{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<section class="detail-shell">
+  <a class="back" href="javascript:history.back()">← Torna ai risultati</a>
+  <div class="detail-head">
+    <span class="route-badge large">{{ journey.route_short_name or 'STP' }}</span>
+    <div><p>Linea</p><h1>{{ journey.route_long_name or journey.trip_headsign or 'Corsa STP' }}</h1></div>
+  </div>
+  {% if journey.trip_headsign %}<p class="direction">Direzione {{ journey.trip_headsign }}</p>{% endif %}
+
+  <div id="map" class="map" aria-label="Mappa delle fermate"></div>
+
+  <div class="timeline-card">
+    <h2>Fermate</h2>
+    <ol class="timeline">
+      {% for stop in journey.stops %}
+      <li class="{% if loop.first or loop.last %}endpoint{% endif %}">
+        <time>{{ stop.time_display }}</time>
+        <span class="dot"></span>
+        <strong>{{ stop.stop_name }}</strong>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+<script id="stops-data" type="application/json">{{ journey.stops|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/routing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.py[cod]
+instance/*.db-wal
+instance/*.db-shm
+data/raw/*.zip
+.env
